@@ -4,7 +4,7 @@ import { EffectComposer, Bloom, ChromaticAberration, DepthOfField } from '@react
 import Lenis from '@studio-freight/lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { useEffect, useRef, useState } from 'react'
+import { Component, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import './App.css'
 
@@ -404,126 +404,185 @@ function StudioScene() {
   )
 }
 
+class CanvasErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn('WebGL / Canvas error caught by ErrorBoundary:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null
+    }
+    return this.props.children
+  }
+}
+
+function checkWebGLSupport() {
+  if (typeof window === 'undefined') return false
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')))
+  } catch (e) {
+    return false
+  }
+}
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState(0)
+  const [webGlAvailable, setWebGlAvailable] = useState(true)
   const stickersRef = useRef([])
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      smoothWheel: true,
-      lerp: 0.08,
-      wheelMultiplier: 0.9,
-    })
+    setWebGlAvailable(checkWebGLSupport())
 
-    const raf = (time) => {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
+    let lenis
+    let frame
+
+    try {
+      lenis = new Lenis({
+        duration: 1.2,
+        smoothWheel: true,
+        lerp: 0.08,
+        wheelMultiplier: 0.9,
+      })
+
+      const raf = (time) => {
+        if (lenis) lenis.raf(time)
+        frame = requestAnimationFrame(raf)
+      }
+
+      frame = requestAnimationFrame(raf)
+    } catch (e) {
+      console.warn('Lenis scroll failed to initialize:', e)
     }
 
-    const frame = requestAnimationFrame(raf)
+    let stickerTween
+    let marqueeTweens = []
 
-    gsap.registerPlugin(ScrollTrigger)
+    try {
+      gsap.registerPlugin(ScrollTrigger)
 
-    gsap.utils.toArray('.reveal').forEach((element) => {
-      gsap.fromTo(
-        element,
-        { opacity: 0, y: 28 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.9,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: element,
-            start: 'top 82%',
+      gsap.utils.toArray('.reveal').forEach((element) => {
+        gsap.fromTo(
+          element,
+          { opacity: 0, y: 28 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.9,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: element,
+              start: 'top 85%',
+            },
           },
-        },
-      )
-    })
+        )
+      })
 
-    gsap.to('.studio-canvas', {
-      y: -120,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '.hero-section',
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true,
-      },
-    })
-
-    const stickerTween = gsap.to(stickersRef.current, {
-      yPercent: -10,
-      x: 0,
-      duration: 2.8,
-      ease: 'sine.inOut',
-      yoyo: true,
-      repeat: -1,
-      stagger: 0.28,
-      force3D: true,
-    })
-
-    const marqueeTracks = gsap.utils.toArray('.marquee-track')
-    const marqueeTweens = marqueeTracks.map((track, index) => {
-      const direction = index % 2 === 0 ? -1 : 1
-      return gsap.to(track, {
-        xPercent: direction * 100,
-        repeat: -1,
+      gsap.to('.studio-canvas', {
+        y: -120,
         ease: 'none',
-        duration: 18,
+        scrollTrigger: {
+          trigger: '.hero-section',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+        },
+      })
+
+      stickerTween = gsap.to(stickersRef.current, {
+        yPercent: -10,
+        x: 0,
+        duration: 2.8,
+        ease: 'sine.inOut',
         yoyo: true,
+        repeat: -1,
+        stagger: 0.28,
         force3D: true,
       })
-    })
 
-    const scrollVelocityTween = gsap.quickTo('.marquee-track', 'timeScale', { duration: 0.35, ease: 'power2.out' })
-    const updateScrollVelocity = () => {
-      const speed = Math.min(1.75, Math.abs(lenis.velocity) * 3.5)
-      scrollVelocityTween(speed)
+      const marqueeTracks = gsap.utils.toArray('.marquee-track')
+      marqueeTweens = marqueeTracks.map((track, index) => {
+        const direction = index % 2 === 0 ? -1 : 1
+        return gsap.to(track, {
+          xPercent: direction * 100,
+          repeat: -1,
+          ease: 'none',
+          duration: 18,
+          yoyo: true,
+          force3D: true,
+        })
+      })
+
+      if (lenis) {
+        const scrollVelocityTween = gsap.quickTo('.marquee-track', 'timeScale', { duration: 0.35, ease: 'power2.out' })
+        const updateScrollVelocity = () => {
+          const speed = Math.min(1.75, Math.abs(lenis.velocity) * 3.5)
+          scrollVelocityTween(speed)
+        }
+        lenis.on('scroll', updateScrollVelocity)
+      }
+
+      gsap.utils.toArray('.sticker-float').forEach((sticker) => {
+        const rx = gsap.quickTo(sticker, 'rotationX', { duration: 0.25, ease: 'power3.out' })
+        const ry = gsap.quickTo(sticker, 'rotationY', { duration: 0.25, ease: 'power3.out' })
+        const scale = gsap.quickTo(sticker, 'scale', { duration: 0.25, ease: 'power3.out' })
+
+        gsap.to(sticker, {
+          rotationX: 10,
+          rotationY: -10,
+          y: -10,
+          duration: 2.8,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        })
+
+        sticker.addEventListener('pointermove', (event) => {
+          const rect = sticker.getBoundingClientRect()
+          const x = (event.clientX - rect.left) / rect.width - 0.5
+          const y = (event.clientY - rect.top) / rect.height - 0.5
+          rx(-y * 18)
+          ry(x * 16)
+          scale(1.05)
+        })
+
+        sticker.addEventListener('pointerleave', () => {
+          rx(0)
+          ry(0)
+          scale(1)
+        })
+      })
+    } catch (e) {
+      console.warn('GSAP animations failed:', e)
     }
 
-    lenis.on('scroll', updateScrollVelocity)
-
-    gsap.utils.toArray('.sticker-float').forEach((sticker) => {
-      const rx = gsap.quickTo(sticker, 'rotationX', { duration: 0.25, ease: 'power3.out' })
-      const ry = gsap.quickTo(sticker, 'rotationY', { duration: 0.25, ease: 'power3.out' })
-      const scale = gsap.quickTo(sticker, 'scale', { duration: 0.25, ease: 'power3.out' })
-
-      gsap.to(sticker, {
-        rotationX: 10,
-        rotationY: -10,
-        y: -10,
-        duration: 2.8,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
+    const revealTimeout = setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el) => {
+        el.style.opacity = '1'
+        el.style.transform = 'none'
       })
-
-      sticker.addEventListener('pointermove', (event) => {
-        const rect = sticker.getBoundingClientRect()
-        const x = (event.clientX - rect.left) / rect.width - 0.5
-        const y = (event.clientY - rect.top) / rect.height - 0.5
-        rx(-y * 18)
-        ry(x * 16)
-        scale(1.05)
-      })
-
-      sticker.addEventListener('pointerleave', () => {
-        rx(0)
-        ry(0)
-        scale(1)
-      })
-    })
+    }, 1200)
 
     return () => {
-      stickerTween.kill()
-      marqueeTweens.forEach((tween) => tween.kill())
-      cancelAnimationFrame(frame)
-      lenis.off('scroll', updateScrollVelocity)
-      lenis.destroy()
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
+      clearTimeout(revealTimeout)
+      if (stickerTween) stickerTween.kill()
+      if (marqueeTweens) marqueeTweens.forEach((tween) => tween.kill())
+      if (frame) cancelAnimationFrame(frame)
+      if (lenis) lenis.destroy()
+      try {
+        ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
+      } catch (e) {}
     }
   }, [])
 
@@ -532,9 +591,13 @@ function App() {
   return (
     <div className="page-shell">
       <div className="studio-canvas" aria-hidden="true">
-        <Canvas camera={{ position: [0, 0, 6], fov: 36 }} dpr={[1, 1.6]}>
-          <StudioScene />
-        </Canvas>
+        {webGlAvailable && (
+          <CanvasErrorBoundary>
+            <Canvas camera={{ position: [0, 0, 6], fov: 36 }} dpr={[1, 1.6]}>
+              <StudioScene />
+            </Canvas>
+          </CanvasErrorBoundary>
+        )}
       </div>
 
       <header className="site-header">
