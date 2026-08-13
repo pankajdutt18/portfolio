@@ -626,7 +626,7 @@ function App() {
 
           <button
             type="button"
-            className="menu-toggle"
+            className={`menu-toggle ${menuOpen ? 'is-open' : ''}`}
             aria-expanded={menuOpen}
             aria-label="Toggle navigation menu"
             onClick={() => setMenuOpen((prev) => !prev)}
