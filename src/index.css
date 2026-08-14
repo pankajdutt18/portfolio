@@ -7,7 +7,7 @@
   color: #f5f7ff;
   background:
     radial-gradient(circle at top, rgba(180, 180, 180, 0.12), transparent 45%),
-    linear-gradient(180deg, #121316 0%, #16171a 28%, #111215 100%);
+    #16171a;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

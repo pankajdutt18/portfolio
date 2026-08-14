@@ -11,49 +11,37 @@ import './App.css'
 const navItems = ['Home', 'Services', 'Work', 'Process', 'About', 'Contact']
 
 const valueHighlights = [
-  'Custom Design',
-  'Mobile First',
-  'Fast Performance',
-  'SEO Ready',
-  'Business Focused',
+  { text: 'Custom Design', icon: <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><path d="M13.5 10.5L21 3v6l-7.5 7.5-6-6 7.5-7.5h6v6z" /><path d="M2.2 21.8l4.4-4.4M10 17l-3 3-5-5 3-3" /></svg> },
+  { text: 'Mobile First', icon: <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg> },
+  { text: 'Fast Performance', icon: <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> },
+  { text: 'SEO Ready', icon: <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> },
+  { text: 'Business Focused', icon: <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v2M12 20v2M22 12h-2M4 12H2"></path></svg> },
 ]
 
 const services = [
   {
-    icon: '◎',
+    theme: 'purple',
+    image: '/src/assets/service_business.jpg',
     title: 'Business Websites',
-    description:
-      'Professional websites for companies and local businesses that need a strong online presence.',
+    description: 'Professional, modern websites that build trust and credibility.',
   },
   {
-    icon: '▣',
+    theme: 'green',
+    image: '/src/assets/service_ecommerce.jpg',
+    title: 'E-commerce Stores',
+    description: 'Secure, fast, and scalable online stores that convert visitors into customers.',
+  },
+  {
+    theme: 'blue',
+    image: '/src/assets/service_landing.jpg',
     title: 'Landing Pages',
-    description:
-      'Focused landing pages designed around a specific product, service, campaign, or conversion goal.',
+    description: 'High-converting landing pages designed to generate leads and grow your business.',
   },
   {
-    icon: '◫',
-    title: 'E-Commerce Websites',
-    description:
-      'Online stores that allow businesses to showcase products and accept orders online.',
-  },
-  {
-    icon: '✦',
-    title: 'Website Redesign',
-    description:
-      'Modernize outdated websites with better design, usability, responsiveness, and performance.',
-  },
-  {
-    icon: '▤',
-    title: 'Custom Web Solutions',
-    description:
-      'More advanced websites and web applications built around specific business requirements.',
-  },
-  {
-    icon: '◌',
-    title: 'Website Maintenance',
-    description:
-      'Ongoing updates, improvements, content changes, bug fixes, and technical support.',
+    theme: 'orange',
+    image: '/src/assets/service_webapp.jpg',
+    title: 'Custom Web Apps',
+    description: 'Powerful web applications built to solve complex business problems.',
   },
 ]
 
@@ -187,14 +175,14 @@ const techStack = [
 ]
 
 const marqueeItems = [
-  'Brand Systems',
-  'Conversion Design',
-  'Motion Systems',
-  'Web Strategy',
-  'Business Growth',
-  'Premium UX',
-  'Performance',
-  'Creative Dev',
+  { text: 'VERSION DESIGN', icon: '©️' },
+  { text: 'MOTION SYSTEMS', icon: '⨯' },
+  { text: 'WEB STRATEGY', icon: '⊡' },
+  { text: 'BUSINESS GROWTH', icon: '◫' },
+  { text: 'PREMIUM UX', icon: '❖' },
+  { text: 'PERFORMANCE', icon: '⚡' },
+  { text: 'CREATIVE DEV', icon: '✦' },
+  { text: 'BRAND SYSTEMS', icon: '▤' },
 ]
 
 const floatingStickers = [
@@ -206,13 +194,13 @@ const floatingStickers = [
 const pricingPlans = [
   {
     name: 'Starter',
-    price: 'Starting from ₹35,000',
+    price: 'Starting from ₹4,000',
     text: 'For simple landing pages and small websites.',
     featured: false,
   },
   {
     name: 'Business',
-    price: 'Starting from ₹75,000',
+    price: 'Starting from ₹25,000',
     text: 'For professional business websites with multiple pages and features.',
     featured: true,
   },
@@ -262,6 +250,7 @@ const faqs = [
   },
 ]
 
+// LiquidBackground restored and updated to use only grey colors (removing black)
 function LiquidBackground() {
   const { pointer, viewport } = useThree()
   const shaderRef = useRef(null)
@@ -334,7 +323,8 @@ function LiquidBackground() {
             float flow = fbm(uv * 5.5 + u_time * 0.18);
             float swirl = flow + ripple * 0.95;
             float glow = smoothstep(0.8, 0.0, dist);
-            vec3 base = vec3(0.06, 0.06, 0.07);
+            // Modified to use only shades of grey, removing the pure black base
+            vec3 base = vec3(0.25, 0.26, 0.28); 
             vec3 highlight = vec3(0.72, 0.74, 0.78);
             vec3 accent = vec3(0.42, 0.44, 0.48);
             vec3 color = base + highlight * swirl * 0.5 + accent * glow * 0.35 + ripple * 0.12;
@@ -374,10 +364,8 @@ function StudioScene() {
       <directionalLight position={[-4, -2, 3]} intensity={1.2} color="#cccccc" />
       <Environment preset="city" />
       <LiquidBackground />
-
       <EffectComposer>
         <Bloom intensity={0.4} luminanceThreshold={0.25} mipmapBlur />
-        <ChromaticAberration offset={[0.0005, 0.0007]} />
         <DepthOfField focusDistance={0.012} focalLength={0.024} bokehScale={1.6} height={480} />
       </EffectComposer>
 
@@ -603,9 +591,9 @@ function App() {
       <header className="site-header">
         <div className="container nav-wrap">
           <a className="brand" href="#home" aria-label="Go to home section">
-            <span className="brand-mark">P</span>
+            <span className="brand-mark">D</span>
             <span className="brand-text">
-              Pankaj Dutt
+              Devnora
               <small>Web Developer &amp; Digital Solutions</small>
             </span>
           </a>
@@ -657,8 +645,7 @@ function App() {
         <section id="home" className="hero-section">
           <div className="container hero-grid">
             <div className="hero-copy reveal">
-              <span className="eyebrow">( 01 )</span>
-              <h1>Websites that make businesses look as good online as they are offline.</h1>
+              <h1>Make businesses look as good online as they are <span className="highlight-text">offline.</span></h1>
               <p>
                 I design and develop modern, high-performance websites tailored to businesses that
                 want to build credibility, attract customers, and grow online.
@@ -666,49 +653,27 @@ function App() {
 
               <div className="hero-actions">
                 <a className="primary-btn" href="#contact">
-                  Start a Project
+                  Start a Project ↗
                 </a>
                 <a className="secondary-btn" href="#work">
                   View My Work
                 </a>
               </div>
 
-              <ul className="hero-meta" aria-label="Key client-focused differentiation">
-                <li>Custom strategy</li>
-                <li>Clear communication</li>
-                <li>Business-first approach</li>
-              </ul>
-            </div>
-
-            <div className="hero-visual reveal">
-              <div className="mockup-shell">
-                <div className="browser-bar">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+              <div className="hero-meta-strip" aria-label="Key client-focused differentiation">
+                <div className="meta-item">
+                  <span className="meta-icon">🚀</span>
+                  Custom Strategy
                 </div>
-
-                <div className="dashboard-preview">
-                  <aside className="sidebar-pod">
-                    <div className="sidebar-pill pill-one"></div>
-                    <div className="sidebar-pill pill-two"></div>
-                    <div className="sidebar-pill pill-three"></div>
-                  </aside>
-
-                  <div className="content-pod">
-                    <div className="hero-card hero-card-large"></div>
-                    <div className="hero-card hero-card-tall"></div>
-                    <div className="mini-row">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                    <div className="stats-grid">
-                      <div></div>
-                      <div></div>
-                      <div></div>
-                    </div>
-                  </div>
+                <div className="meta-divider">|</div>
+                <div className="meta-item">
+                  <span className="meta-icon">💬</span>
+                  Clear Communication
+                </div>
+                <div className="meta-divider">|</div>
+                <div className="meta-item">
+                  <span className="meta-icon">📊</span>
+                  Business-First Approach
                 </div>
               </div>
             </div>
@@ -717,10 +682,13 @@ function App() {
 
         <section className="value-strip reveal" aria-label="Key differentiators">
           <div className="container value-row">
-            {valueHighlights.map((item) => (
-              <div key={item} className="value-item">
-                <span className="dot"></span>
-                {item}
+            {valueHighlights.map((item, i) => (
+              <div key={item.text} className="value-item-wrap">
+                <div className="value-item">
+                  <span className="value-icon">{item.icon}</span>
+                  {item.text}
+                </div>
+                {i < valueHighlights.length - 1 && <div className="value-divider"></div>}
               </div>
             ))}
           </div>
@@ -737,26 +705,30 @@ function App() {
               </p>
             </div>
 
+            <div className="services-grid new-layout">
+              {services.map((service) => (
+                <article className={`service-card theme-${service.theme}`} key={service.title}>
+                  <div className="service-image" style={{ backgroundImage: `url(${service.image})` }}></div>
+                  <div className="service-content">
+                    <h3>{service.title}</h3>
+                    <p>{service.description}</p>
+                    <div className="service-arrow">
+                      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
             <div className="marquee-shell">
               <div className="marquee-track">
                 {[...marqueeItems, ...marqueeItems].map((item, index) => (
-                  <span key={`${item}-${index}`} className="marquee-item">
-                    {item}
+                  <span key={`${item.text}-${index}`} className={`marquee-item pill theme-${index % 4}`}>
+                    <span className="marquee-icon">{item.icon}</span>
+                    {item.text}
                   </span>
                 ))}
               </div>
-            </div>
-
-            <div className="services-grid">
-              {services.map((service) => (
-                <article className="service-card" key={service.title}>
-                  <div className="service-icon" aria-hidden="true">
-                    {service.icon}
-                  </div>
-                  <h3>{service.title}</h3>
-                  <p>{service.description}</p>
-                </article>
-              ))}
             </div>
           </div>
         </section>
@@ -1080,9 +1052,9 @@ function App() {
         <div className="container footer-grid">
           <div>
             <a className="brand footer-brand" href="#home">
-              <span className="brand-mark">P</span>
+              <span className="brand-mark">D</span>
               <span className="brand-text">
-                Pankaj Dutt
+                Devnora
                 <small>Web Developer &amp; Digital Solutions</small>
               </span>
             </a>
@@ -1144,7 +1116,7 @@ function App() {
 
         <div className="footer-bottom">
           <div className="container footer-row">
-            <span>© 2026 Pankaj Dutt. All rights reserved.</span>
+            <span>© 2026 Devnora. All rights reserved.</span>
             <span>Designed &amp; Developed with care.</span>
           </div>
         </div>
